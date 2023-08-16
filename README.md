@@ -1,2 +1,5 @@
-# reminders
-Reminders app web version
+- SQL injection
+- Sensitive data was returned
+- Bug validate data
+- Bug store password in DB
+- Bug return email not in
