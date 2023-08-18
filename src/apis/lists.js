@@ -19,7 +19,8 @@ class Lists {
   serve() {
     this.router.post('/create', async (req, res) => {
       try {
-        const list = await this.listsController.createOneList(req.body.data.title, req.user.id)
+
+        const list = await this.listsController.createOne(req.body.data, req.user.id)
 
         return res
           .status(201)
@@ -40,7 +41,7 @@ class Lists {
     this.router.get('/list', async (req, res) => {
       try {
         const { limit, offset } = req.query
-        const lists = await this.listsController.getLists(req.user.id, limit, offset)
+        const lists = await this.listsController.getMany(req.user.id, limit, offset)
 
         return res
           .status(201)

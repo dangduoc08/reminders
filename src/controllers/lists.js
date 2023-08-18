@@ -1,5 +1,4 @@
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
+const validator = require('validator')
 const HTTPError = require('../error')
 
 class Lists {
@@ -17,20 +16,30 @@ class Lists {
     return Lists.instance
   }
 
-  async createOneList(title, userID) {
-    return await this.listsModel.createByUserID(title, userID)
+  async createOne({ title, title_color }, userID) {
+    if (!validator.isLength(title, { min: 3, max: 100 })) {
+      throw new HTTPError('invalid title', 422)
+    }
+
+    if (typeof title_color === 'string' && !validator.isHexColor(title_color)) {
+      throw new HTTPError('invalid title_color', 422)
+    }
+
+    return await this.listsModel.createOneByUserID(title, title_color, userID)
   }
 
-  async getLists(userID, limit = 50, offset = 0) {
-    if (isNaN(limit)) {
+  async getMany(userID, limit = 50, offset = 0) {
+    if (!validator.isInt(limit)) {
       throw new HTTPError('invalid limit', 422)
     }
 
-    if (isNaN(offset)) {
+    if (!validator.isInt(limit)) {
       throw new HTTPError('invalid offset', 422)
     }
 
-    return await this.listsModel.listByUserID(userID, limit, offset)
+    const lists = await this.listsModel.getManyByUserID(userID, limit, offset)
+
+    return lists
   }
 }
 

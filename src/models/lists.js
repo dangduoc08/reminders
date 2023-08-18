@@ -1,3 +1,5 @@
+const { LIST_STATUSES } = require('../constants')
+
 class Lists {
   static instance
 
@@ -31,17 +33,29 @@ class Lists {
     }
   }
 
-  async createOneByUserID(title, userID) {
+  async createOneByUserID(title, title_color = null, userID) {
     try {
+      if (title_color) {
+        title_color = `'${title_color}'`
+      }
+
       const baseQuery = `
         INSERT INTO
           lists(
             title,
-            user_id
+            title_color,
+            user_id,
+            status,
+            created_at,
+            updated_at
           )
         VALUES (
           '${title}',
-          '${userID}'
+          ${title_color},
+          '${userID}',
+          '${LIST_STATUSES.UNFINISHED}',
+          NOW(),
+          NOW()
         )
         RETURNING *;
       `
@@ -58,10 +72,16 @@ class Lists {
   async getManyByUserID(userID, limit, offset) {
     try {
       const baseQuery = `
-        SELECT * FROM lists
-        WHERE user_id='${userID}'
-        LIMIT ${limit}
-        OFFSET ${offset};
+        SELECT * FROM
+          lists
+        WHERE
+          user_id='${userID}'
+        ORDER BY
+          updated_at DESC
+        LIMIT
+          ${limit}
+        OFFSET
+          ${offset};
       `
 
       console.log(baseQuery)

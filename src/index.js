@@ -72,7 +72,7 @@ async function initTypes(pgClient) {
       user: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      ssl: true
+      ssl: process.env.POSTGRES_SSL === 'true'
     })
 
     await pgClient.connect()
@@ -128,3 +128,7 @@ async function initTypes(pgClient) {
     console.error(e)
   }
 })()
+
+process.on('uncaughtException', (err, origin) => {
+  console.error(err)
+})
