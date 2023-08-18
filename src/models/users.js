@@ -20,11 +20,11 @@ class Users {
       await this.pgClient.query(`
         CREATE TABLE IF NOT EXISTS users (
           id SERIAL PRIMARY KEY,
-          first_name VARCHAR(255) NOT NULL,
-          last_name VARCHAR(255) NOT NULL,
+          first_name VARCHAR(50) NOT NULL,
+          last_name VARCHAR(50) NOT NULL,
           dob DATE NOT NULL,
-          username VARCHAR(100) NOT NULL UNIQUE,
-          email VARCHAR(255) NOT NULL UNIQUE,
+          username VARCHAR(50) NOT NULL UNIQUE,
+          email VARCHAR NOT NULL UNIQUE,
           hash VARCHAR NOT NULL,
           password VARCHAR NOT NULL,
           status user_status NOT NULL,

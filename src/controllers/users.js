@@ -4,7 +4,7 @@ const validator = require('validator')
 const HTTPError = require('../error')
 
 class Users {
-  static instance
+  static _instance
 
   constructor(usersModel, mailsController) {
     this.usersModel = usersModel
@@ -12,28 +12,28 @@ class Users {
   }
 
   static getInstance(usersModel, mailsController) {
-    if (!Users.instance) {
-      Users.instance = new Users(usersModel, mailsController)
+    if (!Users._instance) {
+      Users._instance = new Users(usersModel, mailsController)
     }
 
-    return Users.instance
+    return Users._instance
   }
 
-  async isUserExists(username, email) {
+  async canUserCreate(username, email) {
     try {
       const users = await this.usersModel.listByUsernameOrEmail(username, email)
 
-      if (users.length > 0) {
+      if (users.length === 0) {
         return true
       }
 
       return false
     } catch (_) {
-      return true
+      return false
     }
   }
 
-  validateSignup(userInfo) {
+  validateSignup(input) {
     const {
       first_name,
       last_name,
@@ -41,17 +41,17 @@ class Users {
       username,
       password,
       dob
-    } = userInfo
+    } = input
 
     if (
-      !validator.isLength(first_name, { min: 1, max: 50 }) && 
+      !validator.isLength(first_name, { min: 1, max: 50 }) ||
       !validator.isAlpha(first_name)
     ) {
       throw new HTTPError('invalid first_name', 422)
     }
 
     if (
-      !validator.isLength(last_name, { min: 2, max: 50 }) &&
+      !validator.isLength(last_name, { min: 2, max: 50 }) ||
       !validator.isAlpha(last_name)
     ) {
       throw new HTTPError('invalid last_name', 422)
@@ -61,7 +61,7 @@ class Users {
       throw new HTTPError('invalid email', 422)
     }
 
-    if (!validator.isLength(username, { min: 4, max: 50 })) {
+    if (!validator.isLength(username, { min: 10, max: 50 })) {
       throw new HTTPError('invalid username', 422)
     }
 
@@ -69,18 +69,18 @@ class Users {
       throw new HTTPError('invalid password', 422)
     }
 
-    if (!validator.isDate(dob)) {
+    if (!validator.isDate(new Date(dob))) {
       throw new HTTPError('invalid dob', 422)
     }
   }
 
-  validateSignin(userInfo) {
+  validateSignin(input) {
     const {
       username,
       password
-    } = userInfo
+    } = input
 
-    if (!validator.isLength(username, { min: 4, max: 50 })) {
+    if (!validator.isLength(username, { min: 10, max: 50 })) {
       throw new HTTPError('unmatched username', 401)
     }
 
@@ -89,37 +89,46 @@ class Users {
     }
   }
 
-  // core feature
-  async signup(userInfo) {
+  /**
+   * 
+   * @param {*} input 
+   * @returns user record
+   */
+  async signup(input) {
     const {
       email,
       username,
       password
-    } = userInfo
+    } = input
     // await this.mailsController.send('Verify account', email, 'click to link')
 
-    await this.validateSignup(userInfo)
+    /**
+     * @description validation input data from client request
+     */
+    await this.validateSignup(input)
 
-    const hash = bcrypt.hashSync(password, 10)
-
-    const isUserExists = await this.isUserExists(username, email)
-    if (isUserExists) {
+    /**
+    * @description check whether username or email duplicated
+    */
+    const ok = await this.canUserCreate(username, email)
+    if (!ok) {
       throw new HTTPError('username or email have created', 409)
     }
 
-    const user = await this.usersModel.create({ ...userInfo, hash })
+    const hash = bcrypt.hashSync(password, 10)
+    const user = await this.usersModel.create({ ...input, hash })
 
     return user
   }
 
   // core feature
-  async signin(signinInfo) {
+  async signin(input) {
     const {
       username,
       password
-    } = signinInfo
+    } = input
 
-    this.validateSignin(userInfo)
+    this.validateSignin(input)
 
     const userRec = await this.usersModel.getByUsername({ username })
     if (!userRec) {
@@ -141,7 +150,7 @@ class Users {
       dob,
     }
 
-    const token = jwt.sign(user, process.env.PRIVATE_KEY);
+    const token = jwt.sign(user, process.env.PRIVATE_KEY)
     user.token = token
 
     return user

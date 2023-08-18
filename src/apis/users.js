@@ -19,16 +19,34 @@ class Users {
   serve() {
     this.router.post('/signup', async (req, res) => {
       try {
-        const { first_name, last_name, email, status, created_at, updated_at } = await this.usersController.signup(req.body.data)
-        res.status(201).json({
-          message: 'success',
-          data: { first_name, last_name, email, status, created_at, updated_at }
-        })
+        const { first_name,
+          last_name,
+          email,
+          status,
+          created_at,
+          updated_at
+        } = await this.usersController.signup(req.body.data)
+
+        return res
+          .status(201)
+          .json({
+            message: 'success',
+            data: {
+              first_name,
+              last_name,
+              email,
+              status,
+              created_at,
+              updated_at
+            }
+          })
       } catch (e) {
-        res.status(e.code || 500).json({
-          message: e.message,
-          data: null
-        })
+        res
+          .status(e.code || 500)
+          .json({
+            message: e.message,
+            data: null
+          })
       }
     })
 
@@ -36,16 +54,19 @@ class Users {
       try {
         const user = await this.usersController.signin(req.body.data)
 
-
-        res.status(200).json({
-          message: 'success',
-          data: user
-        })
+        return res
+          .status(200)
+          .json({
+            message: 'success',
+            data: user
+          })
       } catch (e) {
-        res.status(e.code || 500).json({
-          message: e.message,
-          data: null
-        })
+        return res
+          .status(e.code || 500)
+          .json({
+            message: e.message,
+            data: null
+          })
       }
     })
 

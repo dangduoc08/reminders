@@ -18,15 +18,25 @@ const {
   Lists: ListsAPI,
 } = require('./apis')
 const { authenticate } = require('./middlewares')
-const { USER_STATUSES, LIST_STATUSES, TASK_STATUSES } = require('./constants')
+const {
+  USER_STATUSES,
+  LIST_STATUSES,
+  TASK_STATUSES
+} = require('./constants')
 
 async function initTypes(pgClient) {
   const resps = await Promise.all([
     pgClient.query(`
-      SELECT typname FROM pg_type WHERE
-      typname='user_status' OR
-      typname='list_status' OR
-      typname='task_status';
+      SELECT
+        typname 
+      FROM 
+        pg_type
+      WHERE
+        typname='user_status'
+      OR
+        typname='list_status'
+      OR
+        typname='task_status';
     `)
   ])
 
@@ -54,10 +64,10 @@ async function initTypes(pgClient) {
   await Promise.all(genTypeOpr)
 }
 
-async function main() {
+(async function main() {
   try {
     const app = express()
-    const client = new Client({
+    const pgClient = new Client({
       host: process.env.POSTGRES_HOST,
       user: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
@@ -65,22 +75,22 @@ async function main() {
       ssl: true
     })
 
-    await client.connect()
-    // await initTypes(client)
+    await pgClient.connect()
+    // await initTypes(pgClient)
 
     const mailsController = MailsController.getInstance()
 
     /**
      * @description users domain
      */
-    const usersModel = UsersModel.getInstance(client)
+    const usersModel = UsersModel.getInstance(pgClient)
     const usersController = UsersController.getInstance(usersModel, mailsController)
     const usersAPI = UsersAPI.getInstance(usersController)
 
     /**
      * @description lists domain
      */
-    const listsModel = ListsModel.getInstance(client)
+    const listsModel = ListsModel.getInstance(pgClient)
     const listsController = ListsController.getInstance(listsModel)
     const listsAPI = ListsAPI.getInstance(listsController)
 
@@ -91,7 +101,7 @@ async function main() {
     /**
      * @description tags domain
      */
-    const tagsModel = TagsModel.getInstance(client)
+    const tagsModel = TagsModel.getInstance(pgClient)
 
     await Promise.all([
       usersModel.createTable(),
@@ -107,7 +117,7 @@ async function main() {
     )
 
     app
-      .use('/v1/users', usersAPI.serve())
+      .use('/v1/accounts', usersAPI.serve())
       .use('/v1/lists', authenticate, listsAPI.serve())
 
     app.listen(
@@ -117,6 +127,4 @@ async function main() {
   } catch (e) {
     console.error(e)
   }
-}
-
-main()
+})()
