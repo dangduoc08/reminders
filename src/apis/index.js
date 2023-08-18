@@ -1,4 +1,7 @@
-const Users = require('./users');
-const Lists = require('./lists');
+const Users = require('./users')
+const Lists = require('./lists')
 
-module.exports = { Users, Lists }
+module.exports = {
+  Users,
+  Lists
+}

@@ -17,36 +17,44 @@ class Lists {
   }
 
   serve() {
-    this.router.post('/', async (req, res) => {
+    this.router.post('/create', async (req, res) => {
       try {
         const list = await this.listsController.createOneList(req.body.data.title, req.user.id)
 
-        res.status(201).json({
-          message: 'success',
-          data: list
-        })
+        return res
+          .status(201)
+          .json({
+            message: 'success',
+            data: list
+          })
       } catch (e) {
-        res.status(e.code || 500).json({
-          message: e.message,
-          data: null
-        })
+        res
+          .status(e.code || 500)
+          .json({
+            message: e.message,
+            data: null
+          })
       }
     })
 
-    this.router.get('/', async (req, res) => {
+    this.router.get('/list', async (req, res) => {
       try {
         const { limit, offset } = req.query
         const lists = await this.listsController.getLists(req.user.id, limit, offset)
 
-        res.status(201).json({
-          message: 'success',
-          data: lists
-        })
+        return res
+          .status(201)
+          .json({
+            message: 'success',
+            data: lists
+          })
       } catch (e) {
-        res.status(e.code || 500).json({
-          message: e.message,
-          data: null
-        })
+        return res
+          .status(e.code || 500)
+          .json({
+            message: e.message,
+            data: null
+          })
       }
     })
 

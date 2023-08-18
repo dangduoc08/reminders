@@ -21,6 +21,7 @@ class Tags {
           name VARCHAR(100) NOT NULL,
           bg_color VARCHAR(7),
           txt_color VARCHAR(7),
+          user_id INTEGER REFERENCES users (id) NOT NULL,
           created_at TIMESTAMP
         );
       `)
@@ -28,7 +29,6 @@ class Tags {
       throw err
     }
   }
-
 }
 
 module.exports = Tags

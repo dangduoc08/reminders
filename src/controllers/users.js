@@ -21,9 +21,9 @@ class Users {
 
   async canUserCreate(username, email) {
     try {
-      const users = await this.usersModel.listByUsernameOrEmail(username, email)
+      const user = await this.usersModel.getOneByUsernameOrEmail(username, email)
 
-      if (users.length === 0) {
+      if (!user) {
         return true
       }
 
@@ -61,7 +61,10 @@ class Users {
       throw new HTTPError('invalid email', 422)
     }
 
-    if (!validator.isLength(username, { min: 10, max: 50 })) {
+    if (
+      !validator.isLength(username, { min: 10, max: 50 }) ||
+      username.trim().match(/ /gi)?.length > 0
+    ) {
       throw new HTTPError('invalid username', 422)
     }
 
@@ -110,13 +113,24 @@ class Users {
     /**
     * @description check whether username or email duplicated
     */
-    const ok = await this.canUserCreate(username, email)
-    if (!ok) {
-      throw new HTTPError('username or email have created', 409)
+    // const ok = await this.canUserCreate(username, email)
+    // if (!ok) {
+    //   throw new HTTPError('username or email have created', 409)
+    // }
+
+    // FIXME: - Information Disclosure
+    const emailOk = await this.usersModel.getOneByEmail(email)
+    if (emailOk) {
+      throw new HTTPError('email have used', 409)
+    }
+
+    const usernameOk = await this.usersModel.getOneByUsername({ username })
+    if (usernameOk) {
+      throw new HTTPError('username have used', 409)
     }
 
     const hash = bcrypt.hashSync(password, 10)
-    const user = await this.usersModel.create({ ...input, hash })
+    const user = await this.usersModel.createOne({ ...input, hash })
 
     return user
   }
@@ -128,28 +142,25 @@ class Users {
       password
     } = input
 
+    // FIXME: - Data not trim space
+    // - email
+    // - first_name
+    // - last_name
     this.validateSignin(input)
 
-    const userRec = await this.usersModel.getByUsername({ username })
-    if (!userRec) {
+    const user = await this.usersModel.getOneByUsername({ username })
+    if (!user) {
       throw new HTTPError('user not exists')
     }
 
-    const isMatchedPwd = bcrypt.compareSync(password, userRec.hash)
-    if (isMatchedPwd) {
+    // FIXME: - When signin not check status === Actived
+
+    const isMatchedPwd = bcrypt.compareSync(password, user.hash)
+    if (!isMatchedPwd) {
       throw new HTTPError('authentication failed', 401)
     }
-    delete userRec.hash
-    const { first_name, last_name, email, dob, id } = userRec
 
-    const user = {
-      id,
-      first_name: first_name,
-      last_name: last_name,
-      email,
-      dob,
-    }
-
+    // FIXME: - JWT has no exp time
     const token = jwt.sign(user, process.env.PRIVATE_KEY)
     user.token = token
 

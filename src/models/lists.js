@@ -21,7 +21,7 @@ class Lists {
           title VARCHAR(100) NOT NULL,
           status list_status NOT NULL,
           title_color VARCHAR(7),
-          user_id INTEGER REFERENCES users (id),
+          user_id INTEGER REFERENCES users (id) NOT NULL,
           created_at TIMESTAMP NOT NULL,
           updated_at TIMESTAMP NOT NULL
         );
@@ -31,10 +31,14 @@ class Lists {
     }
   }
 
-  async createByUserID(title, userID) {
+  async createOneByUserID(title, userID) {
     try {
       const baseQuery = `
-        INSERT INTO lists(title, user_id)
+        INSERT INTO
+          lists(
+            title,
+            user_id
+          )
         VALUES (
           '${title}',
           '${userID}'
@@ -51,7 +55,7 @@ class Lists {
     }
   }
 
-  async listByUserID(userID, limit, offset) {
+  async getManyByUserID(userID, limit, offset) {
     try {
       const baseQuery = `
         SELECT * FROM lists

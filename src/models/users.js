@@ -37,20 +37,33 @@ class Users {
     }
   }
 
-  async listByUsernameOrEmail(username, email) {
+  async getOneByUsernameOrEmail(username, email) {
     try {
       let baseQuery = `SELECT * FROM users WHERE email='${email}' OR username='${username}';`
 
       console.log(baseQuery)
       const resp = await this.pgClient.query(baseQuery)
 
-      return resp.rows || []
+      return resp.rows?.[0] ?? null
     } catch (err) {
       throw err
     }
   }
 
-  async getByUsername({ username }) {
+  async getOneByEmail(email) {
+    try {
+      let baseQuery = `SELECT * FROM users WHERE email='${email}';`
+
+      console.log(baseQuery)
+      const resp = await this.pgClient.query(baseQuery)
+
+      return resp.rows?.[0] ?? null
+    } catch (err) {
+      throw err
+    }
+  }
+
+  async getOneByUsername({ username }) {
     try {
       let baseQuery = `
         SELECT
@@ -80,8 +93,10 @@ class Users {
     }
   }
 
-  async create({ first_name, last_name, dob, email, username, hash, password }) {
+  async createOne({ first_name, last_name, dob, email, username, hash, password }) {
     try {
+
+      // FIXME: - Store password inside DB
       const baseQuery = `
         INSERT INTO users(
           first_name,

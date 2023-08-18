@@ -1,5 +1,2 @@
-- SQL injection
-- Sensitive data was returned
-- Bug validate data
-- Bug store password in DB
-- Bug return email not in
+- Store password in DB
+- Return sensitive data when signin (hash and password)
